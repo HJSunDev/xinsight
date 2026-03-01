@@ -1,0 +1,23 @@
+# 微信解密数据库（聊天记录明文，体积大且涉及隐私）
+wx_decrypted.db/
+
+# 工作台（使用中包含消息分析等隐私内容）
+workbench.md
+
+# 隐私内容目录：忽略个人数据文件，保留目录结构（README.md）
+self/*
+!self/README.md
+
+crush/*
+!crush/README.md
+
+growth/*
+!growth/README.md
+
+relationships/*
+!relationships/README.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
