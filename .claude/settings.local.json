@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(python:*)",
+      "mcp__WebSearch__bailian_web_search",
+      "WebSearch",
+      "Bash(Get-Date -Format \"yyyy-MM-dd HH:mm:ss \\(dddd\\)\")",
+      "WebFetch(domain:json.schemastore.org)",
+      "WebFetch(domain:www.schemastore.org)",
+      "Bash(curl -s \"https://www.schemastore.org/claude-code-settings.json\")",
+      "WebFetch(domain:www.weather.com.cn)"
+    ]
+  }
+}

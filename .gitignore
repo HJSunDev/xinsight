@@ -17,6 +17,11 @@ growth/*
 relationships/*
 !relationships/README.md
 
+# 临时文件夹
+temp/
+tmp/
+scratch/
+
 # Python
 __pycache__/
 *.pyc
