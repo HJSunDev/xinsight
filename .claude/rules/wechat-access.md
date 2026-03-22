@@ -1,0 +1,48 @@
+---
+description: 微信聊天记录访问指南 - 如何通过 tools/wx_chat.py 读取和查询微信消息
+---
+
+# 微信聊天记录访问
+
+## 工具位置
+
+`tools/wx_chat.py` — 基于 PyWxDump 的微信聊天记录查询工具。
+
+## 前提条件
+
+- 微信 PC 端必须正在运行（需从进程内存提取解密密钥）
+- 已安装依赖：`pip install pywxdump`
+
+## 命令速查
+
+```bash
+# 同步最新数据（首次使用或需要最新消息时执行）
+python tools/wx_chat.py sync
+
+# 列出最近联系人
+python tools/wx_chat.py contacts
+python tools/wx_chat.py contacts --limit 50
+
+# 查看某人的聊天记录（支持昵称或备注，模糊匹配）
+python tools/wx_chat.py chat <昵称或备注>
+python tools/wx_chat.py chat <昵称或备注> --limit 100
+
+# 搜索关键词
+python tools/wx_chat.py search <关键词>
+python tools/wx_chat.py search <关键词> --name <昵称或备注>
+```
+
+## 重要机制
+
+- **WAL 问题**：微信使用 SQLite WAL 模式，最新消息在 `.db-wal` 文件中。`sync` 命令通过 `all_merge_real_time_db` 解决此问题。
+- **首次使用**会自动执行全量解密；后续使用自动读取已有数据库。
+- **数据时效**：如果发现消息不够新，先执行 `sync` 再查询。
+- **数据库膨胀**：`sync` 是增量合并，多次执行后会产生重复数据导致文件持续增大。当文件超过 500MB 时工具会自动提示，此时执行 `rebuild` 重建即可恢复到正常大小。
+- 解密后的数据库存放在 `wx_decrypted.db/` 目录下（已加入 `.gitignore`）。
+
+## AI 使用场景
+
+当用户在对话中提到需要查看微信消息时：
+1. 先执行 `sync` 确保数据最新
+2. 用 `chat` 命令拉取对应联系人的消息
+3. 基于消息内容进行分析、回复建议等
