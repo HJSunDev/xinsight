@@ -1,49 +1,58 @@
 ---
-description: 微信聊天记录访问指南 — 如何通过 tools/wx_chat.py 读取和查询微信消息
+description: 微信聊天记录访问指南 — 通过 MCP 工具直接查询微信消息
 alwaysApply: true
 ---
 
 # 微信聊天记录访问
 
-## 工具位置
+## 接入方式
 
-`tools/wx_chat.py` — 基于 PyWxDump 的微信聊天记录查询工具。
+通过 MCP Server `user-wechat` 直接调用，无需执行命令行。数据实时从微信本地加密数据库解密读取，包含 WAL 增量数据。
 
 ## 前提条件
 
-- 微信 PC 端必须正在运行（需从进程内存提取解密密钥）
-- 已安装依赖：`pip install pywxdump`
+- 微信 PC 端（4.x）必须正在运行
+- MCP Server 已在 Cursor 中配置并启动（`~/.cursor/mcp.json` 中的 `wechat` 条目）
+- 底层工具：`E:\Dev\wechat-decrypt`（基于 wechat-decrypt，Python 3.12 虚拟环境）
 
-## 命令速查
+## 可用工具
 
-```bash
-# 同步最新数据（首次使用或需要最新消息时执行）
-python tools/wx_chat.py sync
+| 工具 | 用途 |
+|------|------|
+| `get_chat_history` | 获取指定联系人的聊天记录（支持昵称/备注模糊匹配、分页、时间范围筛选） |
+| `get_recent_sessions` | 获取最近会话列表（最新消息摘要、未读数） |
+| `get_contacts` | 搜索或列出联系人 |
+| `search_messages` | 按关键词搜索聊天记录（可限定联系人、时间范围） |
+| `get_new_messages` | 获取自上次调用以来的新消息 |
+| `get_chat_images` | 列出某个聊天中的图片消息 |
+| `decode_image` | 解密指定图片（需先通过 get_chat_history 获取 local_id） |
 
-# 列出最近联系人
-python tools/wx_chat.py contacts
-python tools/wx_chat.py contacts --limit 50
+## 常用调用示例
 
-# 查看某人的聊天记录（支持昵称或备注，模糊匹配）
-python tools/wx_chat.py chat <昵称或备注>
-python tools/wx_chat.py chat <昵称或备注> --limit 100
+```
+# 查看某人最近消息
+CallMcpTool(server="user-wechat", toolName="get_chat_history", arguments={"chat_name": "昵称或备注", "limit": 50})
+
+# 按时间范围查询
+CallMcpTool(server="user-wechat", toolName="get_chat_history", arguments={"chat_name": "昵称", "start_time": "2026-04-01", "end_time": "2026-04-03"})
 
 # 搜索关键词
-python tools/wx_chat.py search <关键词>
-python tools/wx_chat.py search <关键词> --name <昵称或备注>
+CallMcpTool(server="user-wechat", toolName="search_messages", arguments={"keyword": "关键词", "chat_name": "昵称"})
+
+# 查看最近会话
+CallMcpTool(server="user-wechat", toolName="get_recent_sessions", arguments={"limit": 20})
 ```
 
-## 重要机制
+## 注意事项
 
-- **WAL 问题**：微信使用 SQLite WAL 模式，最新消息在 `.db-wal` 文件中。`sync` 命令通过 `all_merge_real_time_db` 解决此问题。
-- **首次使用**会自动执行全量解密；后续使用自动读取已有数据库。
-- **数据时效**：如果发现消息不够新，先执行 `sync` 再查询。
-- **数据库膨胀**：`sync` 是增量合并，多次执行后会产生重复数据导致文件持续增大。当文件超过 500MB 时工具会自动提示，此时执行 `rebuild` 重建即可恢复到正常大小。
-- 解密后的数据库存放在 `wx_decrypted.db/` 目录下（已加入 `.gitignore`）。
+- 语音消息返回的是元数据（时长、aeskey 等），无法直接转文字，需用户口述内容
+- 图片消息显示 `local_id`，可用 `decode_image` 工具解密查看
+- 数据直接从微信加密数据库实时解密读取，无需手动同步
+- 如果 MCP Server 未启动或连接失败，检查微信是否在运行，必要时重启 Cursor
 
 ## AI 使用场景
 
 当用户在对话中提到需要查看微信消息时：
-1. 先执行 `sync` 确保数据最新
-2. 用 `chat` 命令拉取对应联系人的消息
-3. 基于消息内容进行分析、回复建议等
+1. 直接调用 `get_chat_history` 拉取对应联系人的消息
+2. 基于消息内容进行分析、回复建议等
+3. 不再需要执行 `sync` 命令，数据始终是最新的

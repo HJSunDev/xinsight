@@ -11,7 +11,7 @@ alwaysApply: true
 - `crush/her.md` — Crush 的基本信息、性格特质、语言特征、关系阶段
 - `crush/shared/` — 为她制作的文件（分析报告、可视化页面等）
 - `growth/` — 成长记录（按需扩展，可能为空）
-- 微信聊天记录 — 通过 `tools/wx_chat.py` 实时查询（详见 `wechat-access.mdc`）
+- 微信聊天记录 — 通过 MCP 工具 `user-wechat` 直接查询（详见 `wechat-access.mdc`）
 
 ## 文件管理原则
 
